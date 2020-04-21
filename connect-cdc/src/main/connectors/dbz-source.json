@@ -1,0 +1,16 @@
+{
+    "name": "dbz-source",
+    "config": {
+        "tasks.max": "1",
+        "plugin.name": "pgoutput",
+        "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+        "heartbeat.interval.ms": 5000,
+        "database.hostname": "localhost",
+        "database.port": "5432",
+        "database.user": "cdcadmin",
+        "database.password": "cdcadmin",
+        "database.dbname": "cdcdb",
+        "database.server.name": "localhost",
+        "table.whitelist": "cdc.customers"
+    }
+}
