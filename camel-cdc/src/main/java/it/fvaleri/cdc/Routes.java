@@ -1,8 +1,6 @@
 package it.fvaleri.cdc;
 
 import javax.jms.ConnectionFactory;
-import javax.xml.bind.JAXBContext;
-
 import org.apache.activemq.artemis.jms.client.ActiveMQConnectionFactory;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Predicate;
@@ -13,7 +11,6 @@ import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.model.dataformat.JaxbDataFormat;
 import org.apache.camel.spi.PropertiesComponent;
 import org.apache.kafka.connect.data.Struct;
-
 import io.debezium.data.Envelope;
 
 public final class Routes extends RouteBuilder {

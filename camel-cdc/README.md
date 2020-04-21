@@ -1,4 +1,4 @@
-## [<<](/README.md) Camel CDC process
+## Camel CDC process
 
 This is our Camel CDC pipeline designed using EIPs.
 ```
@@ -15,12 +15,12 @@ Compile and run the application.
 mvn clean compile exec:java -f ./camel-cdc/pom.xml
 ```
 
-Then try to produce some changes.
+Produce some more changes and check the queues.
 ```sh
-resources/run.sh stream_changes 1000
+./run.sh --stream
 ```
 
-This is the Exchange produced by Debezium:
+This is the Exchange produced by Debezium.
 ```sh
 # body
 Struct{

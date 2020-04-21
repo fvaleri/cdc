@@ -1,21 +1,17 @@
-## [<<](/README.md) Postgres setup
+## External systems setup
 
-This configuration is required by Debezium and it is specific to *Postgres* (tested on v11).
+Start Postgres database (the procedure depends on your specific OS).
 
-We use a simple script to create and initialize the source database.
-The same script can be used to query the table and produce a stream of changes.
+We use a simple script to create and initialize the database.
+This script can balso e used to query the table and produce a stream of changes.
 ```sh
-# create the database
-resources/run.sh create_db
-
-# produce a stream of changes (Ctrl+C to stop)
-resources/run.sh stream_changes
-
-# check table's content
-resources/run.sh check_table
+./run.sh
+./run.sh --database
+./run.sh --query
+./run.sh --stream
 ```
 
-Apply the following changes to enable database internal transaction log access.
+Enable Postgres internal transaction log access (required by Debezium).
 ```sh
 # postgresql.conf: configure replication slot
 wal_level = logical
@@ -30,4 +26,9 @@ psql cdcdb
 ALTER ROLE cdcadmin WITH REPLICATION;
 ALTER TABLE cdc.customers REPLICA IDENTITY FULL;
 # restart Postgres
+```
+
+Start Artemis broker and open the [web console](http://localhost:8161/console) to check messages.
+```sh
+./run.sh --artemis
 ```
