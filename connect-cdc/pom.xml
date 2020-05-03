@@ -26,6 +26,7 @@
             <groupId>org.apache.kafka</groupId>
             <artifactId>connect-transforms</artifactId>
             <version>${kafkaconnect.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.json</groupId>

@@ -1,11 +1,10 @@
 ## External systems setup
 
-Start Postgres database (the procedure depends on your specific OS).
+First of all, you need to start Postgres (the procedure depends on your specific OS).
 
-We use a simple script to create and initialize the database.
-This script can balso e used to query the table and produce a stream of changes.
+Then, there is a simple script to create and initialize the database.
+This script can also be used to query the table and produce a stream of changes.
 ```sh
-./run.sh
 ./run.sh --database
 ./run.sh --query
 ./run.sh --stream
@@ -31,4 +30,6 @@ ALTER TABLE cdc.customers REPLICA IDENTITY FULL;
 Start Artemis broker and open the [web console](http://localhost:8161/console) to check messages.
 ```sh
 ./run.sh --artemis
+# check status
+ps -ef | grep "[A]rtemis" | wc -l
 ```

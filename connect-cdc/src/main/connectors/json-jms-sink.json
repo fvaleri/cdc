@@ -1,18 +1,16 @@
 {
     "name": "json-jms-sink",
     "config": {
-        "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
         "tasks.max": "1",
+        "connector.class": "org.apache.camel.kafkaconnector.CamelSinkConnector",
         "topics": "localhost.cdc.customers",
-        "java.naming.factory.initial": "org.apache.activemq.jndi.ActiveMQInitialContextFactory",
-        "java.naming.provider.url": "tcp://localhost:61616",
-        "java.naming.security.principal": "admin",
-        "java.naming.security.credentials": "admin",
-        "jndi.connection.factory": "connectionFactory",
-        "jms.destination.type": "queue",
-        "jms.destination.name": "CustomersJSON",
-        "confluent.topic.bootstrap.servers": "localhost:9090",
-        "confluent.topic.replication.factor": "1",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "camel.sink.url": "sjms2://queue:CustomersJSON",
+        "camel.component.sjms2.connection-factory": "#class:org.apache.activemq.ActiveMQConnectionFactory",
+        "camel.component.sjms2.connection-factory.brokerURL": "tcp://localhost:61616",
+        "camel.component.sjms2.connection-username": "admin",
+        "camel.component.sjms2.connection-password": "admin",
         "transforms": "JsonWriter",
         "transforms.JsonWriter.type": "it.fvaleri.cdc.JsonWriter"
     }

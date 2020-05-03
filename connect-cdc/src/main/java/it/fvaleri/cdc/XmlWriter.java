@@ -1,16 +1,19 @@
 package it.fvaleri.cdc;
 
-import static org.apache.kafka.connect.transforms.util.Requirements.requireMap;
-
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.connect.connector.ConnectRecord;
+import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.transforms.Transformation;
 import org.json.JSONObject;
 import org.json.XML;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
 public class XmlWriter<R extends ConnectRecord<R>> implements Transformation<R> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(XmlWriter.class);
 
     public XmlWriter() {
     }
@@ -21,14 +24,19 @@ public class XmlWriter<R extends ConnectRecord<R>> implements Transformation<R> 
 
     @Override
     public R apply(R record) {
-        // schemaless transformation (Map instead of Struct)
-        final Map<String, Object> value = requireMap(record.value(), XmlWriter.class.getName());
-        String op = (String) value.get("op");
-        if ("cru".contains(op)) {
-            Map<String, Object> content = (Map<String, Object>) value.get("after");
-            JSONObject json = new JSONObject(content);
-            String newValue = XML.toString(json, "customer");
-            return record.newRecord(record.topic(), record.kafkaPartition(), null, null, null, newValue, record.timestamp());
+        LOG.debug("Input record: {}", record.value());
+        // extract final value and convert
+        JSONObject value = new JSONObject(record.value().toString());
+        String op = (String) value.getString("op");
+        LOG.debug("Operation: {}", op);
+        if (op != null && "cru".contains(op)) {
+            JSONObject after = value.getJSONObject("after");
+            String newValue = XML.toString(after, "customer");
+            return record.newRecord(
+                record.topic(), record.kafkaPartition(),
+                null, null,
+                Schema.STRING_SCHEMA, newValue,
+                record.timestamp());
         } else {
             return null;
         }
