@@ -6,8 +6,11 @@ ARTEMIS_HOME="/tmp/artemis"
 
 KAFKA_URL="https://downloads.apache.org/kafka/2.5.0/kafka_2.12-2.5.0.tgz"
 KAFKA_HOME="/tmp/kafka"
+
 DEBEZIUM_URL="https://repo.maven.apache.org/maven2/io/debezium/debezium-connector-postgres/1.1.0.Final/debezium-connector-postgres-1.1.0.Final-plugin.tar.gz"
+CAMEL_URL="https://repo1.maven.org/maven2/org/apache/camel/kafkaconnector/camel-sjms2-kafka-connector/0.1.0/camel-sjms2-kafka-connector-0.1.0-package.zip"
 PLUGINS_HOME="$KAFKA_HOME/plugins"
+
 CONNECT_URL="http://localhost:7070"
 
 create_db() {
@@ -30,7 +33,7 @@ query_table() {
 start_artemis() {
     echo "Broker provisioning"
     rm -rf $ARTEMIS_HOME && mkdir -p $ARTEMIS_HOME
-    curl -s $ARTEMIS_URL | tar xz -C $ARTEMIS_HOME --strip-components 1
+    curl -sL $ARTEMIS_URL | tar xz -C $ARTEMIS_HOME --strip-components 1
     $ARTEMIS_HOME/bin/artemis create $ARTEMIS_HOME/instance --name instance --user admin --password admin --require-login
     $ARTEMIS_HOME/instance/bin/artemis-service start
     sleep 5
@@ -39,10 +42,27 @@ start_artemis() {
     echo "Done"
 }
 
+plugins_deploy() {
+    echo "Plugins deploy"
+    mkdir -p $PLUGINS_HOME
+    # debezium postgres connector
+    curl -sL $DEBEZIUM_URL | tar xz -C $PLUGINS_HOME
+    # camel kafka sjms2 connector
+    curl -sL $CAMEL_URL -o /tmp/dist.zip && unzip -qq /tmp/dist.zip -d $PLUGINS_HOME && rm /tmp/dist.zip
+    mvn dependency:get -Ddest=$PLUGINS_HOME/camel-sjms2-kafka-connector -Dartifact=org.apache.activemq:activemq-client:5.15.11
+    mvn dependency:get -Ddest=$PLUGINS_HOME/camel-sjms2-kafka-connector -Dartifact=org.apache.geronimo.specs:geronimo-jms_2.0_spec:1.0-alpha-2
+    mvn dependency:get -Ddest=$PLUGINS_HOME/camel-sjms2-kafka-connector -Dartifact=org.apache.geronimo.specs:geronimo-annotation_1.0_spec:1.1.1
+    mvn dependency:get -Ddest=$PLUGINS_HOME/camel-sjms2-kafka-connector -Dartifact=javax.management.j2ee:management-api:1.1-rev-1
+    mvn dependency:get -Ddest=$PLUGINS_HOME/camel-sjms2-kafka-connector -Dartifact=org.fusesource.hawtbuf:hawtbuf:1.11
+    # custom SMTs as fat JAR
+    mvn clean package -f ./connect-cdc/pom.xml
+    cp ./connect-cdc/target/connect-cdc-*.jar $PLUGINS_HOME
+}
+
 start_kafka() {
     echo "Kafka provisioning"
     rm -rf $KAFKA_HOME && mkdir -p $KAFKA_HOME
-    curl -s $KAFKA_URL | tar xz -C $KAFKA_HOME --strip-components 1
+    curl -sL $KAFKA_URL | tar xz -C $KAFKA_HOME --strip-components 1
 
     # zookeeper cluster
     for node in {0,1,2}; do
@@ -60,9 +80,7 @@ start_kafka() {
         $KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/kafka-$node.properties
     done
 
-    # debezium postgres connector
-    mkdir -p $PLUGINS_HOME
-    curl -s $DEBEZIUM_URL | tar xz -C $PLUGINS_HOME
+    plugins_deploy
     echo "Done"
 }
 
@@ -75,6 +93,14 @@ start_connect() {
     echo "Done"
 }
 
+stop_all() {
+    ps -ef | grep 'ConnectDistributed' | grep -v grep | awk '{print $2}' | xargs kill -9
+    ps -ef | grep 'Kafka' | grep -v grep | awk '{print $2}' | xargs kill -9
+    ps -ef | grep 'QuorumPeerMain' | grep -v grep | awk '{print $2}' | xargs kill -9
+    ps -ef | grep 'Artemis' | grep -v grep | awk '{print $2}' | xargs kill -9
+    rm -rf $ARTEMIS_HOME $KAFKA_HOME
+}
+
 USAGE="
 Usage: ./$(basename $0) [OPTIONS]
 
@@ -85,13 +111,15 @@ Options:
   -a, --artemis         Start Artemis broker
   -k, --kafka           Start Kafka cluster
   -c, --connect         Start KafkaConnect cluster
+  -x, --stop            Stop all and cleanup
 "
-case $1 in
+case "$1" in
     -d|--database) create_db;;
     -s|--stream) stream_changes;;
     -q|--query) query_table;;
     -a|--artemis) start_artemis;;
     -k|--kafka) start_kafka;;
     -c|--connect) start_connect;;
+    -x|--stop) stop_all;;
     *) echo "$USAGE"
 esac

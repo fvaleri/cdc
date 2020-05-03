@@ -1,24 +1,27 @@
-# CDC with Debezium
+# CDC with Camel and Debezium
 
-This project compares two approaches for doing Change Data Capture (CDC) based on [Debezium](https://debezium.io).
-A CDC pipeline implements a change streaming from a data source to one or more data sinks.
-The main advantages comparing to a simple poll-based or query-based process are:
+Change Data Capture (CDC) is a well-established software design pattern for a system that monitors and captures
+the changes in data, so that other software can respond to those changes.
+
+Using a CDC engine like [Debezium](https://debezium.io) along with [Camel](https://camel.apache.org) integration
+framework, we can easily build data pipelines to bridge traditional data stores and new cloud-native event-driven
+architectures.
+
+The advantages of CDC comparing to a simple poll-based or query-based process are:
 
 - *All changes captured*: intermediary changes (updates, deletes) between two runs of the poll loop may be missed.
 - *Low overhead*: near real-time reaction to data changes avoids increased CPU load due to frequent polling.
 - *No data model impact*: timestamp columns to determine the last update of data are not needed.
 
-The 1st approach is configuration-driven and runs on top of [KafkaConnect](https://kafka.apache.org/documentation/#connect)
-streaming integration platform. The 2nd approach is code-driven and it is implemented with [Camel](https://camel.apache.org)
-integration framework, recently optimized for cloud-native environments.
+There are two main aproaches for building a CDC pipeline:
 
-Why KafkaConnect? Because it is based on Kafka, the open source streaming data platform powering some of the most
-successful event-driven architectures out there (i.e. Linkedin: 7 trillion messages/day, Netflix: 6 Petabytes/day),
-and it includes a collection of configurable source/sink `Connectors` for zero or low coding integrations.
+The first approach is *configuration-driven* and runs on top of [KafkaConnect](https://kafka.apache.org/documentation/#connect),
+the streaming integration platform based on Kafka. The second approach is *code-driven* and it is purely implemented with Camel
+(no Kafka dependency).
 
-Why Camel? Because you can declaratively create integration pipelines using a powerful DSL based on the enterprise
-integration patterns (EIPs) and it includes are a rich set of `Components` for connecting to all kinds of external
-systems (now you can also use most of them as Connectors thanks to a new sub-project called CamelKafkaConnect).
+While KafkaConnect provides some *Connectors* for zero or low coding integrations, Camel's extensive collection of *Components*
+(300+) enables you to connect to all kinds of external systems. The great news is that these Components can now be used as
+Connectors thanks to a new sub-project called *CamelKafkaConnect* (will use the SJMS2 as an example).
 
 ## Use case
 
@@ -38,6 +41,8 @@ Since Debezium records the log offset asyncronously, any final consumer of these
 Important change event properties: `lsn` (offset) is the log sequence number that tracks the position in the database
 WAL (write ahead log), `txId` represents the identifier of the server transaction which caused the event, `ts_ms`
 represents the number of microseconds since Unix Epoch as the server time at which the transaction was committed.
+
+Prerequisites: Postgres 11, OpenJDK 1.8 and Maven 3.5+.
 
 - [External systems setup](./external/README.md)
 - [KafkaConnect CDC pipeline](./connect-cdc/README.md)
