@@ -12,7 +12,11 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <debezium.version>1.1.0.Final</debezium.version>
+        <camel.version>3.7.1</camel.version>
+        <artemis.version>2.16.0</artemis.version>
+        <debezium.version>1.4.0.Final</debezium.version>
+        <log4j.version>2.14.0</log4j.version>
+        <exec-plugin.version>3.0.0</exec-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -20,13 +24,13 @@
             <dependency>
                 <groupId>org.apache.camel</groupId>
                 <artifactId>camel-bom</artifactId>
-                <version>3.2.0</version>
+                <version>${camel.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>io.debezium</groupId>
-                <artifactId>debezium-connector-postgres</artifactId>
+                <artifactId>debezium-api</artifactId>
                 <version>${debezium.version}</version>
             </dependency>
             <dependency>
@@ -36,7 +40,7 @@
             </dependency>
             <dependency>
                 <groupId>io.debezium</groupId>
-                <artifactId>debezium-core</artifactId>
+                <artifactId>debezium-connector-postgres</artifactId>
                 <version>${debezium.version}</version>
             </dependency>
         </dependencies>
@@ -82,12 +86,12 @@
         <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>artemis-jms-client</artifactId>
-            <version>2.9.0.redhat-00009</version>
+            <version>${artemis.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
-            <version>2.11.1</version>
+            <version>${log4j.version}</version>
         </dependency>
     </dependencies>
 
@@ -96,7 +100,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>1.6.0</version>
+                <version>${exec-plugin.version}</version>
                 <configuration>
                     <mainClass>it.fvaleri.cdc.Application</mainClass>
                 </configuration>
@@ -104,4 +108,30 @@
         </plugins>
     </build>
 
+    <repositories>
+        <repository>
+            <id>central</id>
+            <url>https://repo1.maven.org/maven2</url>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>central</id>
+            <url>https://repo1.maven.org/maven2</url>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
 </project>

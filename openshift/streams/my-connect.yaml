@@ -1,0 +1,48 @@
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaConnect
+metadata:
+  name: my-connect
+  annotations:
+    strimzi.io/use-connector-resources: "true"
+spec:
+  replicas: 1
+  version: 2.6.0
+  image: image-registry.openshift-image-registry.svc:5000/changeit/my-connect
+  bootstrapServers: my-cluster-kafka-bootstrap:9092
+  config:
+    group.id: my-connect
+    key.converter: org.apache.kafka.connect.storage.StringConverter
+    value.converter: org.apache.kafka.connect.storage.StringConverter
+    config.storage.replication.factor: 1
+    offset.storage.replication.factor: 1
+    status.storage.replication.factor: 1
+    config.providers: file
+    config.providers.file.class: org.apache.kafka.common.config.provider.FileConfigProvider
+  jvmOptions:
+    gcLoggingEnabled: false
+  logging:
+      type: inline
+      loggers:
+        log4j.logger.org.apache.camel.kafkaconnector: INFO
+        log4j.logger.io.debezium: INFO
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  readinessProbe:
+    initialDelaySeconds: 30
+    timeoutSeconds: 10
+  livenessProbe:
+    initialDelaySeconds: 30
+    timeoutSeconds: 10
+  template:
+    pod:
+      imagePullSecrets: []
+  externalConfiguration:
+    volumes:
+      - name: connectors
+        secret:
+          secretName: connectors

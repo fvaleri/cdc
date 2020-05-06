@@ -1,44 +1,53 @@
-## Connect CDC process
+## Connect CDC pipeline
 
 This is the KafkaConnect distributed mode architecture that we will configure to fit our use case.
+
 ```
-SourceConnector --> KafkaConnectDM [Worker0JVM(TaskA0, TaskB0, TaskB1),...] --> SinkConnector
-                                |
-                    Kafka (offsets, config, status)
+             _________________________
+[PgSQL] ---> | Kafka Connect         | ---> [Artemis]
+             | worker0, worker1, ... |
+             |_______________________|
+                        |
+                        |
+             --------------------------
+             | Kafka Cluster          |
+             | offset, config, status |
+             |________________________|           
 ```
 
-We will run all components on localhost, but ideally each one should run in a different host (physical, VM or container).
-Connect workers operate well in containers and in managed environments. Take a look at the [Strimzi](https://strimzi.io)
-project if you want to know how to easily operate Kafka and KafkaConnect on Kubernetes platform.
+We will run all components on localhost, but ideally each one should run in a different host (physical, VM or container). KafkaConnect workers operate well in containers and in managed environments.
 
-We need a Kafka cluster up and running (3 ZooKeeper + 3 Kafka). This step also download and install all required Connectors
-(`debezium-connector-postgres`, `camel-sjms2-kafka-connector`) and dependencies.
-```sh
-./run.sh --kafka
+We need a Kafka cluster up and running (3 ZooKeeper + 3 Kafka). This step also download and install all required Connectors (debezium-connector-postgres, camel-sjms2-kafka-connector) and dependencies.
+
+```
+./run.sh kafka
+
 # status check
-ps -ef | grep "[Q]uorumPeerMain" | wc -l
-ps -ef | grep "[K]afka" | wc -l
+ps -e | grep "[Q]uorumPeerMain" | wc -l
+ps -e | grep "[K]afka" | wc -l
 ```
 
-Now we can start our 3-nodes KafkaConnect cluster in distributed mode (workers that are configured with matching `group.id`
-values automatically discover each other and form a cluster).
-```sh
-./run.sh --connect
+Now we can start our 3-nodes KafkaConnect cluster in distributed mode (workers that are configured with matching `group.id` values automatically discover each other and form a cluster).
+
+```
+./run.sh connect
+
 # status check
-ps -ef | grep "[C]onnectDistributed" | wc -l
-tail -n100 /tmp/kafka/logs/connect.log
-/tmp/kafka/bin/kafka-topics.sh --zookeeper localhost:2180 --list
+ps -e | grep "[C]onnectDistributed" | wc -l
+tail -n100 /tmp/run.sh/kafka/logs/connect.log
+/tmp/run.sh/kafka/bin/kafka-topics.sh --zookeeper localhost:2180 --list
 curl localhost:7070/connector-plugins | jq
 ```
 
-The infrastructure is ready and we can finally configure our CDC pipeline.
-```sh
-# debezium source task (topic name == serverName.schemaName.tableName)
-curl -sX POST -H "Content-Type: application/json" localhost:7070/connectors -d @connect-cdc/src/main/connectors/dbz-source.json
+The infrastructure is ready, and we can finally configure our CDC pipeline.
 
-# jms sink tasks (powered by sjms2 component)
-curl -sX POST -H "Content-Type: application/json" localhost:7070/connectors -d @connect-cdc/src/main/connectors/json-jms-sink.json
-curl -sX POST -H "Content-Type: application/json" localhost:7070/connectors -d @connect-cdc/src/main/connectors/xml-jms-sink.json
+```
+# Debezium source task (topic name == serverName.schemaName.tableName)
+curl -sX POST -H "Content-Type: application/json" localhost:7070/connectors -d @connect-cdc/config/connectors/dbz-source.json
+
+# JMS sink tasks (based on SJMS2 component)
+curl -sX POST -H "Content-Type: application/json" localhost:7070/connectors -d @connect-cdc/config/connectors/json-jms-sink.json
+curl -sX POST -H "Content-Type: application/json" localhost:7070/connectors -d @connect-cdc/config/connectors/xml-jms-sink.json
 
 # status check
 curl -s localhost:7070/connectors | jq
@@ -47,13 +56,15 @@ curl -s localhost:7070/connectors/json-jms-sink/status | jq
 curl -s localhost:7070/connectors/xml-jms-sink/status | jq
 ```
 
-Produce some more changes and check queues.
-```sh
-./run.sh --stream
+Produce some more changes and check the queues.
+
+```
+./run.sh stream
 ```
 
-This is the change event produced by Debezium.
-```sh
+This is the change event created by Debezium connector.
+
+```
 {
   "payload": {
     "before": null,

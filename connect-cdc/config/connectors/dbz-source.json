@@ -2,18 +2,18 @@
     "name": "dbz-source",
     "config": {
         "tasks.max": "1",
-        "plugin.name": "pgoutput",
         "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
         "key.converter": "org.apache.kafka.connect.storage.StringConverter",
         "value.converter": "org.apache.kafka.connect.json.JsonConverter",
         "value.converter.schemas.enable": "false",
+        "plugin.name": "pgoutput",
         "heartbeat.interval.ms": 5000,
         "database.hostname": "localhost",
+        "database.server.name": "localhost",
+        "database.dbname": "cdcdb",
         "database.port": "5432",
         "database.user": "cdcadmin",
         "database.password": "cdcadmin",
-        "database.dbname": "cdcdb",
-        "database.server.name": "localhost",
-        "table.whitelist": "cdc.customers"
+        "table.include.list": "cdc.customers"
     }
 }

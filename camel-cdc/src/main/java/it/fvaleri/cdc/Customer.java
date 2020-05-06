@@ -7,7 +7,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "customer")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class Customer {
-
     private long id;
     private String firstName;
     private String lastName;
@@ -57,7 +56,7 @@ public class Customer {
 
     @Override
     public String toString() {
-        return "Customer [email=" + email + ", firstName=" + firstName + ", id=" + id + ", lastName=" + lastName + "]";
+        return "Customer [email=" + email + ", firstName="
+            + firstName + ", id=" + id + ", lastName=" + lastName + "]";
     }
-
 }

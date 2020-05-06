@@ -1,73 +1,68 @@
 # CDC with Camel and Debezium
 
-Change Data Capture (CDC) is a well-established software design pattern for a system that monitors and captures
-the changes in data, so that other software can respond to those changes.
+Change Data Capture (CDC) is a well-established software design pattern for a system that monitors and captures data changes, so that other software can respond to those events. Using a log-based CDC engine like [Debezium](https://debezium.io) we can easily build data pipelines to bridge traditional data stores and new event-driven architectures (EDA). Debezium captures data changes directly from the internal data store's write ahead log (WAL).
 
-Using a CDC engine like [Debezium](https://debezium.io) along with [Camel](https://camel.apache.org) integration
-framework, we can easily build data pipelines to bridge traditional data stores and new cloud-native event-driven
-architectures.
+The main advantages of a log-based CDC process over a poll-based one are:
 
-The advantages of CDC comparing to a simple poll-based or query-based process are:
+- **Low overhead**: near real-time reaction to data changes avoids increased CPU load due to frequent polling.
+- **No lost changes**: using a poll loop you may miss intermediary changes (updates, deletes) between two runs.
+- **No data model impact**: no need for timestamp columns to determine the last update of data.
 
-- *All changes captured*: intermediary changes (updates, deletes) between two runs of the poll loop may be missed.
-- *Low overhead*: near real-time reaction to data changes avoids increased CPU load due to frequent polling.
-- *No data model impact*: timestamp columns to determine the last update of data are not needed.
+There are two main approaches for building CDC pipelines with Debezium:
 
-There are two main aproaches for building a CDC pipeline:
+1. **Code-driven** using plain Camel routes with no Kafka dependency.
+2. **Configuration-driven** using a KafkaConnect cluster with its connectors.
 
-The first approach is *configuration-driven* and runs on top of [KafkaConnect](https://kafka.apache.org/documentation/#connect),
-the streaming integration platform based on Kafka. The second approach is *code-driven* and it is purely implemented with Camel
-(no Kafka dependency).
+While KafkaConnect provides some Connectors for zero or low coding integrations, Camel's extensive collection of Components (300+) allows you to connect to all kinds of external systems. Thanks to a new sub-project called CamelKafkaConnector they can also be used as Connectors.
 
-While KafkaConnect provides some *Connectors* for zero or low coding integrations, Camel's extensive collection of *Components*
-(300+) enables you to connect to all kinds of external systems. The great news is that these Components can now be used as
-Connectors thanks to a new sub-project called *CamelKafkaConnect* (will use the SJMS2 as an example).
+## Pipeline implementations
 
-## Use case
+Enable TX log access and start Postgres external source system.
 
-We want to focus on the technology, so the use case is relatively simple, but includes both routing and transformation logic.
-The requirement is to stream all new customers from a source table to XML and JSON sink queues.
 ```
-                                     |---> (xml-sink-queue)
-(source-table) ---> [cdc-process] ---|
-                                     |---> (json-sink-queue)
+# postgresql.conf: configure replication slot with pgoutput decoding pulgin
+wal_level = logical
+max_wal_senders = 4
+max_replication_slots = 4
+
+# pg_hba.conf: allow localhost replication to user
+local   cdcdb       cdcadmin                                trust
+host    cdcdb       cdcadmin        127.0.0.1/32            trust
+host    cdcdb       cdcadmin        ::1/128                 trust
+
+# database init
+./run.sh init
+./run.sh query
+./run.sh stream
 ```
 
-## Implementations
+Start Artemis external sink system.
 
-No matter what technology you use, the CDC process must run as a single thread to maintain ordering.
-Since Debezium records the log offset asyncronously, any final consumer of these changes must be idempotent.
+```
+./run.sh artemis
 
-Important change event properties: `lsn` (offset) is the log sequence number that tracks the position in the database
-WAL (write ahead log), `txId` represents the identifier of the server transaction which caused the event, `ts_ms`
-represents the number of microseconds since Unix Epoch as the server time at which the transaction was committed.
+# status check
+ps -ef | grep "[A]rtemis" | wc -l
 
-Prerequisites: Postgres 11, OpenJDK 1.8 and Maven 3.5+.
+# login: admin/admin
+open http://localhost:8161/console
+```
 
-- [External systems setup](./external/README.md)
-- [KafkaConnect CDC pipeline](./connect-cdc/README.md)
-- [Camel CDC pipeline](./camel-cdc/README.md)
+The requirement is to stream all customer changes from a source table to XML and JSON sink queues:
 
-## Considerations
+- [Camel CDC pipeline (code-driven)](./camel-cdc)
+- [Connect CDC pipeline (configuration-driven)](./connect-cdc)
 
-Both CDC solutions are perfectly valid but, depending on your experience, you may find one of them more convenient.
-If you already have a Kafka cluster, an implicit benefit of using KafkaConnect is that it stores the whole change log
-in a topic, so you can easily rebuild the application state if needed.
+Bonus: the same Connect pipeline can also be deployed on OpenShift: 
 
-Another benefit of running on top of KafkaConnect in  distributed mode is that you have a fault tolerant CDC process.
-It is possible to achieve the same by running the Camel process as
-[clustered singleton service](https://www.nicolaferraro.me/2017/10/17/creating-clustered-singleton-services-on-kubernetes)
-on top of Kubernetes.
+- [Cloud-native CDC pipeline (OpenShift)](./openshift)
 
-One thing to be aware of is that Debezium offers better performance because of the access to the internal transaction log,
-but there is no standard for it, so a change to the database implementation may require a rewrite of the corresponding plugin.
-This also means that every data source has its own procedure to enable access to its internal log.
+## Final considerations
 
-KafkaConnect single message transformations (SMTs) can be chained (sort of Unix pipeline) and extended with custom implementations,
-but they are actually designed for simple modifications. Long chains of SMTs are hard to maintain and reason about. Moreover, remember
-that tranformations are syncronous and applied at each message, so you can really slowdown the streaming pipeline with heavy processing
-or external service calls.
+Both CDC approaches are valid but, depending on your experience, you may find one of them more convenient. No matter what technology you use, the CDC process must run as single thread to maintain ordering. Since Debezium records the log offset asynchronously, any final consumer of these changes must be idempotent.
 
-In cases where you need to do heavy processing, split, enrich, aggregate records or call external services, you should use a stream
-processing layer between Connectors such as Kafka Streams or Camel. Just remember that Kafka Streams creates internal topics and you
-are forced to put transformed data back into some Kafka topic (data duplication), while this is just an option using Camel.
+If you already have a Kafka cluster, two implicit benefits of using KafkaConnect in distributed mode are that you have a fault tolerant CDC process, and you can easily rebuild the application state if needed. One thing to be aware of is that Debezium offers better performance because it reads changes directly from the internal transaction log, but there is no standard for it, so an implementation change may require a rewrite of the corresponding plugin. This also means that every data source has its own procedure to enable access to its transaction log.
+
+Connectors configuration allows you to transform message payload by using Single Message Transformations (SMTs). They can be chained and extended with custom implementations, but they are actually designed for simple modifications and long chains of SMTs are hard to maintain and reason about. Moreover, transformations are synchronous and applied on each message, so you can really slow down the streaming pipeline with heavy processing or external service calls.
+
+In cases where you need to do heavy processing, split, enrich, aggregate records or call external services, you should use a stream processing layer between Connectors such as Kafka Streams or plain Camel. Just remember that Kafka Streams creates internal topics, and you are forced to put transformed data back into Kafka (data duplication), while this is just an option using Camel.

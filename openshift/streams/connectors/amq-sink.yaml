@@ -1,0 +1,16 @@
+apiVersion: kafka.strimzi.io/v1alpha1
+kind: KafkaConnector
+metadata:
+  name: amq-sink
+  labels:
+    strimzi.io/cluster: my-connect
+spec:
+  tasksMax: 1
+  class: org.apache.camel.kafkaconnector.sjms2.CamelSjms2SinkConnector
+  config:
+    topics: my-mysql.cdcdb.customers
+    camel.sink.url: sjms2://queue:queue.customers
+    camel.component.sjms2.connection-factory: "#class:org.apache.activemq.ActiveMQConnectionFactory"
+    camel.component.sjms2.connection-factory.brokerURL: tcp://my-broker-all-0-svc:61612
+    camel.component.sjms2.connection-username: ${file:/opt/kafka/external-configuration/connectors/config.properties:amq.username}
+    camel.component.sjms2.connection-password: ${file:/opt/kafka/external-configuration/connectors/config.properties:amq.password}
