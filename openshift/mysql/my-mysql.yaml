@@ -1,0 +1,116 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-mysql-pvc
+  labels:
+    app: my-mysql
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-mysql-cfg
+  labels:
+    app: my-mysql
+data:
+  # debezium
+  my.cnf: |
+    !include /etc/my.cnf
+    [mysqld]
+    server_id = 224466
+    log_bin = ON
+    binlog_format = ROW
+    binlog_row_image = full
+    binlog_rows_query_log_events = ON
+    expire_logs_days = 10
+    gtid_mode = ON
+    enforce_gtid_consistency = ON
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-mysql-env
+  labels:
+    app: my-mysql
+data:
+  MYSQL_DEFAULTS_FILE: /config/configdb.d/my.cnf
+  MYSQL_DATABASE: cdcdb
+  MYSQL_USER: cdcadmin
+  MYSQL_PASSWORD: cdcadmin
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: my-mysql-ss
+  labels:
+    app: my-mysql
+spec:
+  replicas: 1
+  serviceName: my-mysql
+  selector:
+    matchLabels:
+      app: my-mysql
+  template:
+    metadata:
+      labels:
+        app: my-mysql
+    spec:
+      containers:
+      - name: mysql
+        image: registry.redhat.io/rhscl/mysql-80-rhel7:8.0
+        resources:
+          limits:
+            memory: 512Mi
+        envFrom:
+        - configMapRef:
+            name: my-mysql-env
+        ports:
+        - containerPort: 3306
+          protocol: TCP
+        volumeMounts:
+        - name: my-mysql-data
+          mountPath: /var/lib/mysql
+        - name: my-mysql-cfg
+          mountPath: /config/configdb.d
+        - name: my-mysql-init
+          mountPath: /config/initdb.d
+        readinessProbe:
+          exec:
+            command: ["sh", "-c", "MYSQL_PWD=$MYSQL_PASSWORD mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'"]
+          initialDelaySeconds: 15
+          timeoutSeconds: 2
+        livenessProbe:
+          exec:
+            command: ["sh", "-c", "MYSQL_PWD=$MYSQL_PASSWORD mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'"]
+          initialDelaySeconds: 45
+          timeoutSeconds: 2
+      volumes:
+      - name: my-mysql-data
+        persistentVolumeClaim:
+          claimName: my-mysql-pvc
+      - name: my-mysql-cfg
+        configMap:
+          name: my-mysql-cfg
+      - name: my-mysql-init
+        configMap:
+          name: my-mysql-init
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-mysql-svc
+  labels:
+    app: my-mysql
+spec:
+  ports:
+  - name: mysql
+    port: 3306
+    protocol: TCP
+    targetPort: 3306
+  selector:
+    app: my-mysql

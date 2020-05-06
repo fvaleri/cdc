@@ -2,10 +2,10 @@
     "name": "json-jms-sink",
     "config": {
         "tasks.max": "1",
-        "connector.class": "org.apache.camel.kafkaconnector.CamelSinkConnector",
-        "topics": "localhost.cdc.customers",
+        "connector.class": "org.apache.camel.kafkaconnector.sjms2.CamelSjms2SinkConnector",
         "key.converter": "org.apache.kafka.connect.storage.StringConverter",
         "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "topics": "localhost.cdc.customers",
         "camel.sink.url": "sjms2://queue:CustomersJSON",
         "camel.component.sjms2.connection-factory": "#class:org.apache.activemq.ActiveMQConnectionFactory",
         "camel.component.sjms2.connection-factory.brokerURL": "tcp://localhost:61616",

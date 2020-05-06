@@ -6,7 +6,6 @@ import org.apache.camel.support.TypeConverterSupport;
 import org.apache.kafka.connect.data.Struct;
 
 public class CustomerConverter extends TypeConverterSupport {
-
     @Override
     public <T> T convertTo(Class<T> type, Exchange exchange, Object value) throws TypeConversionException {
         Struct struct = (Struct) exchange.getIn().getBody();
@@ -17,5 +16,4 @@ public class CustomerConverter extends TypeConverterSupport {
             struct.getString("email")
         );
     }
-
 }

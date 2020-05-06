@@ -1,0 +1,30 @@
+apiVersion: broker.amq.io/v2alpha4
+kind: ActiveMQArtemis
+metadata:
+  name: my-broker
+spec:
+  adminUser: admin
+  adminPassword: admin
+  deploymentPlan:
+    size: 1
+    image: registry.redhat.io/amq7/amq-broker:7.8
+    requireLogin: true
+    jolokiaAgentEnabled: false
+    persistenceEnabled: true
+    messageMigration: true
+    journalType: nio
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+    storage:
+      size: 10Gi
+  console:
+    expose: true
+  acceptors:
+    - name: all
+      protocols: all
+      port: 61612
+      sslEnabled: false
+      connectionsAllowed: 10
+      expose: true
