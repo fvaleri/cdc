@@ -32,21 +32,8 @@ public final class Routes extends RouteBuilder {
 
     @Override
     public void configure() throws Exception {
-        final JacksonDataFormat jacksonDataFormat = new JacksonDataFormat();
-        final JaxbDataFormat jaxbDataFormat = new JaxbDataFormat();
-        jaxbDataFormat.setContextPath(Routes.class.getPackage().getName());
-        jaxbDataFormat.setPrettyPrint("false");
-        jaxbDataFormat.setFragment("true");
-
-        getContext().getTypeConverterRegistry()
-            .addTypeConverter(Customer.class, Struct.class, new CustomerConverter());
-
-        final PropertiesComponent prop = getContext().getPropertiesComponent();
-        final ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(prop.resolveProperty("broker.url").get());
-        final JmsComponent jmsComponent = JmsComponent.jmsComponentAutoAcknowledge(connectionFactory);
-        jmsComponent.setUsername(prop.resolveProperty("broker.user").get());
-        jmsComponent.setPassword(prop.resolveProperty("broker.password").get());
-        getContext().addComponent("jms", jmsComponent);
+        typeConverterSetup();
+        jmsComponentSetup();
 
         final Predicate isCreateOrUpdateEvent =
             header(DebeziumConstants.HEADER_OPERATION).in(
@@ -56,7 +43,7 @@ public final class Routes extends RouteBuilder {
 
         from(DATABASE_READER)
             .routeId(Routes.class.getName() + ".DatabaseReader")
-            .log(LoggingLevel.DEBUG, "Incoming change \nBODY: ${body} \nHEADERS: ${headers}")
+            .log(LoggingLevel.DEBUG, "Incoming message \nBODY: ${body} \nHEADERS: ${headers}")
             .filter(isCreateOrUpdateEvent)
                 .convertBodyTo(Customer.class)
                 .multicast().streaming().parallelProcessing()
@@ -66,17 +53,44 @@ public final class Routes extends RouteBuilder {
 
         from(JSON_WRITER)
             .routeId(Routes.class.getName() + ".JsonWriter")
-            .marshal(jacksonDataFormat)
+            .marshal(jacksonDataFormat())
             .log(LoggingLevel.DEBUG, "JSON format: ${body}")
             .convertBodyTo(String.class)
             .to("jms:queue:CustomersJSON?disableReplyTo=true");
 
         from(XML_WRITER)
             .routeId(Routes.class.getName() + ".XmlWriter")
-            .marshal(jaxbDataFormat)
+            .marshal(jaxbDataFormat())
             .log(LoggingLevel.DEBUG, "XML format: ${body}")
             .convertBodyTo(String.class)
             .to("jms:queue:CustomersXML?disableReplyTo=true");
+    }
+
+    private JacksonDataFormat jacksonDataFormat() {
+        final JacksonDataFormat jacksonDataFormat = new JacksonDataFormat();
+        return jacksonDataFormat;
+    }
+
+    private JaxbDataFormat jaxbDataFormat() {
+        final JaxbDataFormat jaxbDataFormat = new JaxbDataFormat();
+        jaxbDataFormat.setContextPath(Routes.class.getPackage().getName());
+        jaxbDataFormat.setPrettyPrint("false");
+        jaxbDataFormat.setFragment("true");
+        return jaxbDataFormat;
+    }
+
+    private void typeConverterSetup() {
+        getContext().getTypeConverterRegistry()
+            .addTypeConverter(Customer.class, Struct.class, new CustomerConverter());
+    }
+
+    private void jmsComponentSetup() {
+        final PropertiesComponent prop = getContext().getPropertiesComponent();
+        final ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(prop.resolveProperty("broker.url").get());
+        final JmsComponent jmsComponent = JmsComponent.jmsComponentAutoAcknowledge(connectionFactory);
+        jmsComponent.setUsername(prop.resolveProperty("broker.user").get());
+        jmsComponent.setPassword(prop.resolveProperty("broker.password").get());
+        getContext().addComponent("jms", jmsComponent);
     }
 
 }
