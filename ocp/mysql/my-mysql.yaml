@@ -1,0 +1,129 @@
+kind: DeploymentConfig
+apiVersion: apps.openshift.io/v1
+metadata:
+  name: my-mysql
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+    recreateParams:
+      post:
+        failurePolicy: Abort
+        execNewPod:
+          # db init as post lifecycle hook (SERVICE_HOST var built from metadata.name)
+          command:
+            - /bin/sh
+            - '-c'
+            - sleep 10 && MYSQL_PWD="$MYSQL_ROOT_PASSWORD" $MYSQL_PREFIX/bin/mysql -h $MY_MYSQL_SERVICE_HOST -u root < /config/initdb.d/initdb.sql
+          containerName: my-mysql
+          volumes:
+            - db-init
+  selector:
+    name: my-mysql
+  template:
+    metadata:
+      name: my-mysql
+      labels:
+        name: my-mysql
+    spec:
+      volumes:
+        - name: db-data
+          emptyDir: {}
+        - name: db-init
+          configMap:
+            name: db-init
+        - name: db-config
+          configMap:
+            name: db-config
+      containers:
+        - env:
+            - name: MYSQL_DEFAULTS_FILE
+              value: /config/configdb.d/my.cnf
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: database-user
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: database-password
+            - name: MYSQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: database-name
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: database-admin-password
+          name: my-mysql
+          # image already present
+          image: ' '
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: db-data
+              mountPath: /var/lib/mysql/data
+            - name: db-init
+              mountPath: /config/initdb.d
+            - name: db-config
+              mountPath: /config/configdb.d
+          ports:
+            - containerPort: 3306
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            tcpSocket:
+              port: 3306
+            timeoutSeconds: 1
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -i
+                - -c
+                - MYSQL_PWD="$MYSQL_PASSWORD" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              memory: 512Mi
+          securityContext:
+            privileged: false
+  triggers:
+    - type: ConfigChange
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+          - my-mysql
+        from:
+          kind: ImageStreamTag
+          name: mysql:8.0
+          namespace: openshift
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: my-mysql
+  labels:
+    application: cdc-pipeline
+    app: cdc-pipeline
+  annotations:
+    template.openshift.io/expose-uri: mysql://{.spec.clusterIP}:{.spec.ports[?(.name=="mysql")].port}
+spec:
+  ports:
+    - name: mysql
+      port: 3306
+      protocol: TCP
+      targetPort: 3306
+  selector:
+    name: my-mysql

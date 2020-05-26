@@ -1,4 +1,4 @@
-## External systems setup
+## External systems
 
 Enable transaction log access and start Postgres.
 ```sh
@@ -23,6 +23,6 @@ This script can also be used to query the table and produce a stream of changes.
 Then, start Artemis broker and open the [web console](http://localhost:8161/console) (login: admin/admin).
 ```sh
 ./run.sh --artemis
-# check status
+# status check
 ps -ef | grep "[A]rtemis" | wc -l
 ```

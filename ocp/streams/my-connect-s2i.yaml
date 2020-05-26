@@ -1,0 +1,44 @@
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaConnectS2I
+metadata:
+  name: my-connect-cluster
+  annotations:
+    # enable connect operator
+    strimzi.io/use-connector-resources: "true"
+spec:
+  version: 2.4.0
+  replicas: 1
+  bootstrapServers: my-kafka-cluster-kafka-bootstrap:9092
+  resources:
+    requests:
+      memory: "1Gi"
+    limits:
+      memory: "1Gi"
+  jvmOptions:
+    gcLoggingEnabled: false
+  config:
+    group.id: my-connect-cluster
+    key.converter: org.apache.kafka.connect.storage.StringConverter
+    value.converter: org.apache.kafka.connect.storage.StringConverter
+    offset.storage.topic: my-connect-cluster-offsets
+    config.storage.topic: my-connect-cluster-configs
+    status.storage.topic: my-connect-cluster-status
+    # single node setup
+    config.storage.replication.factor: 1
+    offset.storage.replication.factor: 1
+    status.storage.replication.factor: 1
+    # config properties
+    config.providers: file
+    config.providers.file.class: org.apache.kafka.common.config.provider.FileConfigProvider
+  template:
+    pod:
+      # avoid ImagePullBackOff
+      imagePullSecrets: []
+  externalConfiguration:
+    volumes:
+      - name: debezium-config
+        secret:
+          secretName: debezium-config
+      - name: camel-config
+        secret:
+          secretName: camel-config

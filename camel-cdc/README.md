@@ -1,4 +1,4 @@
-## Camel CDC process
+## Camel CDC pipeline
 
 This is our Camel CDC pipeline designed using EIPs.
 ```

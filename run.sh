@@ -1,17 +1,19 @@
 #!/bin/sh
 set -e
 
+TMP="/tmp/cdc"
+
+ARTEMIS_HOME="$TMP/artemis"
 ARTEMIS_URL="https://downloads.apache.org/activemq/activemq-artemis/2.12.0/apache-artemis-2.12.0-bin.tar.gz"
-ARTEMIS_HOME="/tmp/artemis"
 
+KAFKA_HOME="$TMP/kafka"
 KAFKA_URL="https://downloads.apache.org/kafka/2.5.0/kafka_2.12-2.5.0.tgz"
-KAFKA_HOME="/tmp/kafka"
-
-DEBEZIUM_URL="https://repo.maven.apache.org/maven2/io/debezium/debezium-connector-postgres/1.1.1.Final/debezium-connector-postgres-1.1.1.Final-plugin.tar.gz"
-CAMEL_URL="https://repo1.maven.org/maven2/org/apache/camel/kafkaconnector/camel-sjms2-kafka-connector/0.2.0/camel-sjms2-kafka-connector-0.2.0-package.zip"
-PLUGINS_HOME="$KAFKA_HOME/plugins"
 
 CONNECT_URL="http://localhost:7070"
+CONNECTOR_URLS=(
+    "https://repo.maven.apache.org/maven2/io/debezium/debezium-connector-postgres/1.1.1.Final/debezium-connector-postgres-1.1.1.Final-plugin.zip"
+    "https://repo1.maven.org/maven2/org/apache/camel/kafkaconnector/camel-sjms2-kafka-connector/0.2.0/camel-sjms2-kafka-connector-0.2.0-package.zip"
+)
 
 create_db() {
     echo "Postgres provisioning"
@@ -66,15 +68,16 @@ start_kafka() {
 
 start_connect() {
     echo "Connect provisioning"
-    mkdir -p $PLUGINS_HOME
+    local connectors="$TMP/connectors" && mkdir -p $connectors
+    for url in "${CONNECTOR_URLS[@]}"; do
+        curl -sL $url -o $connectors/file.zip && unzip -qq $connectors/file.zip -d $connectors
+    done
+    sleep 2
+    rm -rf $connectors/file.zip
 
-    # debezium postgres connector
-    curl -sL $DEBEZIUM_URL | tar xz -C $PLUGINS_HOME
-    # camel kafka sjms2 connector
-    curl -sL $CAMEL_URL -o /tmp/dist.zip && unzip -qq /tmp/dist.zip -d $PLUGINS_HOME && rm /tmp/dist.zip
     # custom SMTs as fat JAR
     mvn clean package -f ./connect-cdc/pom.xml
-    cp ./connect-cdc/target/connect-cdc-*.jar $PLUGINS_HOME
+    cp ./connect-cdc/target/connect-cdc-*.jar $connectors
 
     # connect cluster
     for node in {0,1,2}; do
@@ -85,11 +88,12 @@ start_connect() {
 }
 
 stop_cleanup() {
+    echo "Stopping all processes"
     ps -ef | grep 'ConnectDistributed' | grep -v grep | awk '{print $2}' | xargs kill -9
     ps -ef | grep 'Kafka' | grep -v grep | awk '{print $2}' | xargs kill -9
     ps -ef | grep 'QuorumPeerMain' | grep -v grep | awk '{print $2}' | xargs kill -9
     ps -ef | grep 'Artemis' | grep -v grep | awk '{print $2}' | xargs kill -9
-    rm -rf $ARTEMIS_HOME $KAFKA_HOME /tmp/offset.dat
+    rm -rf $TMP /tmp/offset.dat
     echo "Done"
 }
 

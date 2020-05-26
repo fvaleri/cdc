@@ -1,0 +1,23 @@
+kind: KafkaConnector
+apiVersion: kafka.strimzi.io/v1alpha1
+metadata:
+  name: mysql-source
+  labels:
+    # must match connect cluster name
+    strimzi.io/cluster: my-connect-cluster
+spec:
+  tasksMax: 1
+  class: io.debezium.connector.mysql.MySqlConnector
+  config:
+    database.hostname: my-mysql
+    database.port: 3306
+    database.user: ${file:/opt/kafka/external-configuration/debezium-config/mysql.properties:username}
+    database.password: ${file:/opt/kafka/external-configuration/debezium-config/mysql.properties:password}
+    database.dbname: cdcdb
+    database.server.name: my-mysql
+    database.server.id: 224466
+    database.whitelist: cdcdb
+    database.allowPublicKeyRetrieval: true
+    database.history.kafka.bootstrap.servers: my-kafka-cluster-kafka-bootstrap:9092
+    database.history.kafka.topic: dbhistory.cdcdb
+    table.whitelist: cdcdb.customers

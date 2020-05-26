@@ -1,4 +1,4 @@
-## Connect CDC process
+## Connect CDC pipeline
 
 This is the KafkaConnect distributed mode architecture that we will configure to fit our use case.
 ```
