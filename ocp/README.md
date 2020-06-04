@@ -111,7 +111,6 @@ oc get kafkatopics
 
 ```sh
 KAFKA_CLUSTER="my-kafka-cluster"
-CONNECT_URL="http://my-connect-cluster-connect-api:8083"
 CONNECTOR_URLS=(
     "https://repo.maven.apache.org/maven2/io/debezium/debezium-connector-mysql/1.1.1.Final/debezium-connector-mysql-1.1.1.Final-plugin.zip"
     "https://repo1.maven.org/maven2/org/apache/camel/kafkaconnector/camel-sjms2-kafka-connector/0.2.0/camel-sjms2-kafka-connector-0.2.0-package.zip"
@@ -164,10 +163,10 @@ oc exec -i $KAFKA_CLUSTER-kafka-0 -c kafka -- bin/kafka-console-consumer.sh \
 ```sh
 rm -rf $TMP
 oc delete project $PROJECT_NAME
-oc delete crd/activemqartemises.broker.amq.io >/dev/null 2>&1
-oc delete crd/activemqartemisaddresses.broker.amq.io >/dev/null 2>&1
-oc delete crd/activemqartemisscaledowns.broker.amq.io >/dev/null 2>&1
-oc delete crd -l app=strimzi >/dev/null 2>&1
-oc delete clusterrolebinding -l app=strimzi >/dev/null 2>&1
-oc delete clusterrole -l app=strimzi >/dev/null 2>&1
+oc delete crd/activemqartemises.broker.amq.io
+oc delete crd/activemqartemisaddresses.broker.amq.io
+oc delete crd/activemqartemisscaledowns.broker.amq.io
+oc delete crd -l app=strimzi
+oc delete clusterrolebinding -l app=strimzi
+oc delete clusterrole -l app=strimzi
 ```
