@@ -1,13 +1,13 @@
-apiVersion: kafka.strimzi.io/v1alpha1
+apiVersion: kafka.strimzi.io/v1beta1
 kind: Kafka
 metadata:
   name: my-kafka-cluster
 spec:
   kafka:
-    version: 2.4.0
+    version: 2.5.0
     replicas: 1
     config:
-      log.message.format.version: 2.4
+      log.message.format.version: 2.5
       log.retention.minutes: 720
       # single node setup
       num.partitions: 1

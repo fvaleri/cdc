@@ -60,9 +60,8 @@ spec:
                   name: db-creds
                   key: database-admin-password
           name: my-mysql
-          # image already present
-          image: ' '
-          imagePullPolicy: IfNotPresent
+          image: registry.redhat.io/rhscl/mysql-80-rhel7:8.0
+          imagePullPolicy: Always
           volumeMounts:
             - name: db-data
               mountPath: /var/lib/mysql/data
@@ -98,17 +97,6 @@ spec:
               memory: 512Mi
           securityContext:
             privileged: false
-  triggers:
-    - type: ConfigChange
-    - type: ImageChange
-      imageChangeParams:
-        automatic: true
-        containerNames:
-          - my-mysql
-        from:
-          kind: ImageStreamTag
-          name: mysql:8.0
-          namespace: openshift
 ---
 kind: Service
 apiVersion: v1

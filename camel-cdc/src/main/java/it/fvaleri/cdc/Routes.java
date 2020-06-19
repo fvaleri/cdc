@@ -26,6 +26,7 @@ public final class Routes extends RouteBuilder {
         + "&schemaWhitelist={{database.schema}}"
         + "&tableWhitelist={{database.schema}}.customers"
         + "&offsetStorageFileName=/tmp/offset.dat"
+        + "&offsetFlushIntervalMs=10000"
         + "&pluginName=pgoutput";
     private static final String XML_WRITER = "direct:xml-writer";
     private static final String JSON_WRITER = "direct:json-writer";

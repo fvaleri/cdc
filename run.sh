@@ -4,15 +4,15 @@ set -e
 TMP="/tmp/cdc"
 
 ARTEMIS_HOME="$TMP/artemis"
-ARTEMIS_URL="https://downloads.apache.org/activemq/activemq-artemis/2.12.0/apache-artemis-2.12.0-bin.tar.gz"
+ARTEMIS_URL="https://archive.apache.org/dist/activemq/activemq-artemis/2.13.0/apache-artemis-2.13.0-bin.tar.gz"
 
 KAFKA_HOME="$TMP/kafka"
-KAFKA_URL="https://downloads.apache.org/kafka/2.5.0/kafka_2.12-2.5.0.tgz"
+KAFKA_URL="https://archive.apache.org/dist/kafka/2.5.0/kafka_2.12-2.5.0.tgz"
 
 CONNECT_URL="http://localhost:7070"
 CONNECTOR_URLS=(
-    "https://repo.maven.apache.org/maven2/io/debezium/debezium-connector-postgres/1.1.1.Final/debezium-connector-postgres-1.1.1.Final-plugin.zip"
-    "https://repo1.maven.org/maven2/org/apache/camel/kafkaconnector/camel-sjms2-kafka-connector/0.2.0/camel-sjms2-kafka-connector-0.2.0-package.zip"
+    "https://repo.maven.apache.org/maven2/io/debezium/debezium-connector-postgres/1.2.0.Final/debezium-connector-postgres-1.2.0.Final-plugin.zip"
+    "https://repository.apache.org/content/groups/public/org/apache/camel/kafkaconnector/camel-sjms2-kafka-connector/0.3.0/camel-sjms2-kafka-connector-0.3.0-package.zip"
 )
 
 create_db() {

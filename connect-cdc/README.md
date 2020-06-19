@@ -2,7 +2,7 @@
 
 This is the KafkaConnect distributed mode architecture that we will configure to fit our use case.
 ```
-SourceConnector --> KafkaConnectDM [Worker0JVM(TaskA0, TaskB0, TaskB1),...] --> SinkConnector
+Postgres --> KafkaConnect [Worker0JVM(TaskA0, TaskB0, TaskB1),...] --> Artemis
                                 |
                     Kafka (offsets, config, status)
 ```
@@ -26,8 +26,8 @@ values automatically discover each other and form a cluster).
 ./run.sh --connect
 # status check
 ps -ef | grep "[C]onnectDistributed" | wc -l
-tail -n100 /tmp/kafka/logs/connect.log
-/tmp/kafka/bin/kafka-topics.sh --zookeeper localhost:2180 --list
+tail -n100 /tmp/cdc/kafka/logs/connect.log
+/tmp/cdc/kafka/bin/kafka-topics.sh --zookeeper localhost:2180 --list
 curl localhost:7070/connector-plugins | jq
 ```
 
@@ -47,7 +47,7 @@ curl -s localhost:7070/connectors/json-jms-sink/status | jq
 curl -s localhost:7070/connectors/xml-jms-sink/status | jq
 ```
 
-Produce some more changes and check queues.
+Produce some more changes and check the queues.
 ```sh
 ./run.sh --stream
 ```

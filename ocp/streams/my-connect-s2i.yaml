@@ -6,7 +6,7 @@ metadata:
     # enable connect operator
     strimzi.io/use-connector-resources: "true"
 spec:
-  version: 2.4.0
+  version: 2.5.0
   replicas: 1
   bootstrapServers: my-kafka-cluster-kafka-bootstrap:9092
   resources:
