@@ -6,7 +6,7 @@ Note that we are using unsecured components that are not suitable for production
 
 ### Initialization
 
-```
+```sh
 API_ENDPOINT="https://api.crc.testing:6443"
 ADMIN_NAME="kubeadmin"
 ADMIN_PASS="dpDFV-xamBW-kKAk3-Fi6Lg"
@@ -22,7 +22,7 @@ oc new-project $NAMESPACE
 
 ### MySQL database (source system)
 
-```
+```sh
 # deploy resource
 oc create configmap my-mysql-init --from-file=./openshift/mysql/initdb.sql
 oc create -f ./openshift/mysql/my-mysql.yaml
@@ -44,7 +44,7 @@ oc exec my-mysql-ss-0 -- sh -c 'MYSQL_PWD="cdcadmin" mysql -u cdcadmin cdcdb -e 
 
 ### AMQ broker (sink system)
 
-```
+```sh
 mkdir $TMP/amq
 unzip -qq $DOWNLOAD_DIR/amq-broker-operator-7.8.0-ocp-install-examples.zip -d $TMP/amq
 AMQ_DEPLOY="$(find $TMP/amq -name "deploy" -type d)"
@@ -69,7 +69,7 @@ oc get activemqartemisaddresses
 
 ### AMQ Streams Kafka
 
-```
+```sh
 mkdir $TMP/streams
 unzip -qq $DOWNLOAD_DIR/amq-streams-1.6.0-ocp-install-examples.zip -d $TMP/streams
 STREAMS_DEPLOY="$(find $TMP/streams -name "install" -type d)"
@@ -87,7 +87,7 @@ oc get kafkas
 
 ### AMQ Streams KafkaConnect
 
-```
+```sh
 CONNECT_NAME="my-connect"
 CONNECT_IMAGE="registry.redhat.io/amq7/amq-streams-kafka-26-rhel7:1.6.0"
 CONNECTORS=(
@@ -108,10 +108,7 @@ oc patch bc my-connect --type json -p '[{"op":"add", "path":"/spec/strategy/dock
 oc start-build my-connect --from-dir=$TMP/my-connect --follow
 
 # deploy resources
-oc create secret generic connectors-prop --from-file=./openshift/streams/connectors/config.properties
-sed "s/changeit/$NAMESPACE/g" ./openshift/streams/my-connect.yaml | oc create -f -
-
-# deploy config (topic name == serverName.databaseName.tableName)
+sed "s/NAMESPACE/$NAMESPACE/g" ./openshift/streams/my-connect.yaml | oc create -f -
 oc create -f ./openshift/streams/connectors/mysql-source.yaml
 oc create -f ./openshift/streams/connectors/amq-sink.yaml
 
@@ -120,12 +117,12 @@ oc describe kafkaconnector mysql-source
 oc describe kafkaconnector amq-sink
 
 # check queue's content from the AMQ web console
-open http://$(oc get routes my-broker-wconsj-0-svc-rte -o=jsonpath='{.status.ingress[0].host}{"\n"}')/console
+echo http://$(oc get routes my-broker-wconsj-0-svc-rte -o=jsonpath='{.status.ingress[0].host}{"\n"}')/console
 ```
 
 ### Cleanup
 
-```
+```sh
 rm -rf $TMP
 oc delete project $NAMESPACE
 oc delete crds $(oc get crds | grep activemq | awk '{print $1}')

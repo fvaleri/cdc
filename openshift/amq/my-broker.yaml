@@ -4,7 +4,7 @@ metadata:
   name: my-broker
 spec:
   adminUser: admin
-  adminPassword: admin
+  adminPassword: changeit
   deploymentPlan:
     size: 1
     image: registry.redhat.io/amq7/amq-broker:7.8
@@ -22,9 +22,9 @@ spec:
   console:
     expose: true
   acceptors:
-    - name: all
-      protocols: all
-      port: 61612
-      sslEnabled: false
-      connectionsAllowed: 10
-      expose: true
+  - name: all
+    protocols: all
+    port: 61612
+    sslEnabled: false
+    connectionsAllowed: 10
+    expose: true

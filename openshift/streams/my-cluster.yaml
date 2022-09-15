@@ -15,19 +15,18 @@ spec:
       transaction.state.log.replication.factor: 1
       transaction.state.log.min.isr: 1
     listeners:
-      - name: plain
-        port: 9092
-        type: internal
-        tls: false
+    - name: plain
+      port: 9092
+      type: internal
+      tls: false
     logging:
       type: inline
       loggers:
         kafka.root.logger.level: INFO
-        log4j.logger.kafka.authorizer.logger: INFO
-        log4j.logger.kafka.controller: INFO
-        log4j.logger.kafka.log.LogCleaner: INFO
     jvmOptions:
       gcLoggingEnabled: false
+      "-XX":
+        ExitOnOutOfMemoryError: "true"
     resources:
       limits:
         cpu: 500m
@@ -40,10 +39,10 @@ spec:
         size: 10Gi
         deleteClaim: false
     readinessProbe:
-      initialDelaySeconds: 30
+      initialDelaySeconds: 60
       timeoutSeconds: 10
     livenessProbe:
-      initialDelaySeconds: 30
+      initialDelaySeconds: 60
       timeoutSeconds: 10
     template:
       pod:
@@ -65,10 +64,10 @@ spec:
     jvmOptions:
       gcLoggingEnabled: false
     readinessProbe:
-      initialDelaySeconds: 30
+      initialDelaySeconds: 60
       timeoutSeconds: 10
     livenessProbe:
-      initialDelaySeconds: 30
+      initialDelaySeconds: 60
       timeoutSeconds: 10
   entityOperator:
     topicOperator:

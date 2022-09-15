@@ -2,29 +2,30 @@
 
 This is our Camel CDC pipeline designed using EIPs.
 
-```
+```sh
                                                                        |--> (format converter) --> [JSON queue]
 [pgSQL] --> (Debezium endpoint) --> (type converter) --> (multicast) --|
                                                                        |--> (format converter) --> [XML queue]
 ```
 
-We use the Debezium PostgreSQL Component as the endpoint which creates an event-driven consumer. This is a wrapper around Debezium embedded engine which enables CDC without the need to maintain Kafka clusters.
+We use the Debezium PostgreSQL Component as the endpoint which creates an event-driven consumer. This is a wrapper
+around Debezium embedded engine which enables CDC without the need to maintain Kafka clusters.
 
 Compile and run the application.
 
-```
+```sh
 mvn clean compile exec:java -f ./camel-cdc/pom.xml
 ```
 
 Produce some more changes and check queues.
 
-```
+```sh
 ./run.sh stream
 ```
 
 This is the Exchange created by Debezium component.
 
-```
+```sh
 # body
 Struct{
     id=46,

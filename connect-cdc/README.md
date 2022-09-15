@@ -2,7 +2,7 @@
 
 This is the KafkaConnect distributed mode architecture that we will configure to fit our use case.
 
-```
+```sh
              _________________________
 [PgSQL] ---> | Kafka Connect         | ---> [Artemis]
              | worker0, worker1, ... |
@@ -15,11 +15,13 @@ This is the KafkaConnect distributed mode architecture that we will configure to
              |________________________|           
 ```
 
-We will run all components on localhost, but ideally each one should run in a different host (physical, VM or container). KafkaConnect workers operate well in containers and in managed environments.
+We will run all components on localhost, but ideally each one should run in a different host (VM or container).
+KafkaConnect workers operate well in containers and in managed environments.
 
-We need a Kafka cluster up and running (3 ZooKeeper + 3 Kafka). This step also download and install all required Connectors (debezium-connector-postgres, camel-sjms2-kafka-connector) and dependencies.
+We need a Kafka cluster up and running (3 ZooKeeper + 3 Kafka). This step also download and install all required
+Connectors (debezium-connector-postgres, camel-sjms2-kafka-connector) and dependencies.
 
-```
+```sh
 ./run.sh kafka
 
 # status check
@@ -27,9 +29,10 @@ ps -e | grep "[Q]uorumPeerMain" | wc -l
 ps -e | grep "[K]afka" | wc -l
 ```
 
-Now we can start our 3-nodes KafkaConnect cluster in distributed mode (workers that are configured with matching `group.id` values automatically discover each other and form a cluster).
+Now we can start our 3-nodes KafkaConnect cluster in distributed mode (workers that are configured with
+matching `group.id` values automatically discover each other and form a cluster).
 
-```
+```sh
 ./run.sh connect
 
 # status check
@@ -41,7 +44,7 @@ curl localhost:7070/connector-plugins | jq
 
 The infrastructure is ready, and we can finally configure our CDC pipeline.
 
-```
+```sh
 # Debezium source task (topic name == serverName.schemaName.tableName)
 curl -sX POST -H "Content-Type: application/json" localhost:7070/connectors -d @connect-cdc/config/connectors/dbz-source.json
 
@@ -58,13 +61,13 @@ curl -s localhost:7070/connectors/xml-jms-sink/status | jq
 
 Produce some more changes and check the queues.
 
-```
+```sh
 ./run.sh stream
 ```
 
 This is the change event created by Debezium connector.
 
-```
+```sh
 {
   "payload": {
     "before": null,
