@@ -8,8 +8,8 @@ This is our Camel CDC pipeline designed using EIPs.
                                                                        |--> (format converter) --> [XML queue]
 ```
 
-We use the Debezium PostgreSQL Component as the endpoint which creates an event-driven consumer. This is a wrapper
-around Debezium embedded engine which enables CDC without the need to maintain Kafka clusters.
+We use the Debezium PostgreSQL Component as the endpoint which creates an event-driven consumer.
+This is a wrapper around Debezium embedded engine which enables CDC without the need to maintain Kafka clusters.
 
 Compile and run the application.
 

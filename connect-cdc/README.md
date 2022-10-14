@@ -18,8 +18,8 @@ This is the KafkaConnect distributed mode architecture that we will configure to
 We will run all components on localhost, but ideally each one should run in a different host (VM or container).
 KafkaConnect workers operate well in containers and in managed environments.
 
-We need a Kafka cluster up and running (3 ZooKeeper + 3 Kafka). This step also download and install all required
-Connectors (debezium-connector-postgres, camel-sjms2-kafka-connector) and dependencies.
+We need a Kafka cluster up and running (3 ZooKeeper + 3 Kafka).
+This step also download and install all required Connectors (debezium-connector-postgres, camel-sjms2-kafka-connector) and dependencies.
 
 ```sh
 ./run.sh kafka
@@ -29,8 +29,7 @@ ps -e | grep "[Q]uorumPeerMain" | wc -l
 ps -e | grep "[K]afka" | wc -l
 ```
 
-Now we can start our 3-nodes KafkaConnect cluster in distributed mode (workers that are configured with
-matching `group.id` values automatically discover each other and form a cluster).
+Now we can start our 3-nodes KafkaConnect cluster in distributed mode (workers that are configured with matching `group.id` values automatically discover each other and form a cluster).
 
 ```sh
 ./run.sh connect
