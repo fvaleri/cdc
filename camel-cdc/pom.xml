@@ -8,15 +8,16 @@
     <version>1.0.0-SNAPSHOT</version>
 
     <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
         <camel.version>3.7.1</camel.version>
         <artemis.version>2.16.0</artemis.version>
         <debezium.version>1.4.0.Final</debezium.version>
         <log4j.version>2.14.0</log4j.version>
-        <exec-plugin.version>3.0.0</exec-plugin.version>
+
+        <plugin.compiler.version>3.10.1</plugin.compiler.version>
+        <plugin.exec.version>3.1.0</plugin.exec.version>
     </properties>
 
     <dependencyManagement>
@@ -98,40 +99,21 @@
     <build>
         <plugins>
             <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${plugin.compiler.version}</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>${exec-plugin.version}</version>
+                <version>${plugin.exec.version}</version>
                 <configuration>
-                    <mainClass>it.fvaleri.cdc.Application</mainClass>
+                    <mainClass>it.fvaleri.cdc.Main</mainClass>
                 </configuration>
             </plugin>
         </plugins>
     </build>
-
-    <repositories>
-        <repository>
-            <id>central</id>
-            <url>https://repo1.maven.org/maven2</url>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>central</id>
-            <url>https://repo1.maven.org/maven2</url>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </pluginRepository>
-    </pluginRepositories>
 </project>

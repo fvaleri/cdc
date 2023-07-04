@@ -8,13 +8,14 @@
     <version>1.0.0-SNAPSHOT</version>
 
     <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
         <kafka-connect.version>2.6.0</kafka-connect.version>
-        <json.version>20201115<json.version>
-        <shade-plugin.version>3.2.4</shade-plugin.version>
+        <json.version>20201115</json.version>
+
+        <plugin.compiler.version>3.10.1</plugin.compiler.version>
+        <plugin.shade.version>3.2.4</plugin.shade.version>
     </properties>
 
     <dependencies>
@@ -40,9 +41,17 @@
     <build>
         <plugins>
             <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${plugin.compiler.version}</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>${shade-plugin.version}</version>
+                <version>${plugin.shade.version}</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -51,9 +60,6 @@
                         </goals>
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <artifactSet>
-                                <excludes></excludes>
-                            </artifactSet>
                         </configuration>
                     </execution>
                 </executions>
