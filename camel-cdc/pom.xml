@@ -10,6 +10,9 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <java.source.version>1.8</java.source.version>
+        <java.target.version>1.8</java.target.version>
+        <main.class>it.fvaleri.cdc.Main</main.class>
 
         <camel.version>3.7.1</camel.version>
         <artemis.version>2.16.0</artemis.version>
@@ -102,8 +105,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${plugin.compiler.version}</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>${java.source.version}</source>
+                    <target>${java.target.version}</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -111,7 +114,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>${plugin.exec.version}</version>
                 <configuration>
-                    <mainClass>it.fvaleri.cdc.Main</mainClass>
+                    <mainClass>${main.class}</mainClass>
                 </configuration>
             </plugin>
         </plugins>
