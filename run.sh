@@ -80,7 +80,7 @@ connect() {
   done
 
   # my SMT fat JAR
-  mvn clean package -f "$RUN_BASE"/connect-cdc/my-smt/pom.xml
+  mvn package -f "$RUN_BASE"/connect-cdc/my-smt/pom.xml
   cp "$RUN_BASE"/connect-cdc/my-smt/target/my-smt-*.jar "$plugins"
 
   # connect cluster

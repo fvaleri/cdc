@@ -14,7 +14,7 @@ This is a wrapper around Debezium embedded engine which enables CDC without the 
 Compile and run the application.
 
 ```sh
-mvn clean compile exec:java -f ./camel-cdc/pom.xml
+mvn compile exec:java -f ./camel-cdc/pom.xml
 ```
 
 Produce some more changes and check queues.
