@@ -10,16 +10,13 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.source.version>1.8</java.source.version>
-        <java.target.version>1.8</java.target.version>
+        <maven.compiler.release>8</maven.compiler.release>
         <main.class>it.fvaleri.cdc.Main</main.class>
-
         <camel.version>3.7.1</camel.version>
         <artemis.version>2.16.0</artemis.version>
         <debezium.version>1.4.0.Final</debezium.version>
         <log4j.version>2.14.0</log4j.version>
-
-        <plugin.compiler.version>3.10.1</plugin.compiler.version>
+        <plugin.compiler.version>3.13.0</plugin.compiler.version>
         <plugin.exec.version>3.1.0</plugin.exec.version>
     </properties>
 
@@ -105,10 +102,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${plugin.compiler.version}</version>
-                <configuration>
-                    <source>${java.source.version}</source>
-                    <target>${java.target.version}</target>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
